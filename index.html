@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Multiplayer Card Table (4–8 players)</title>
+    <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<div class="app">
+    <header class="row space">
+        <h1>Multiplayer Card Table</h1>
+        <div class="row gap">
+            <label>Display name <input id="displayName" maxlength="16" placeholder="e.g., Vraj"/></label>
+            <button id="howToBtn">Rules</button>
+        </div>
+    </header>
+
+    <section id="lobby">
+        <div class="room-controls row wrap gap">
+            <button id="createRoomBtn">Create Room</button>
+            <input id="roomCodeInput" placeholder="Enter room code" />
+            <button id="joinRoomBtn">Join Room</button>
+        </div>
+
+        <div id="roomInfo" class="hidden">
+            <p>Room: <strong id="roomCodeText"></strong> • Dealer: <span id="dealerName">-</span></p>
+            <p>Players (<span id="playerCount">0</span>/8):</p>
+            <ul id="playerList" class="players"></ul>
+            <div class="row gap">
+                <button id="readyBtn">I’m Ready</button>
+                <button id="leaveBtn" class="danger">Leave</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="bidding" class="hidden">
+        <h2>Bidding</h2>
+        <p>Turn: <span id="bidTurnName">-</span></p>
+        <div id="bidPanel" class="row gap">
+            <input id="bidInput" type="number" min="150" max="250" step="1" placeholder="150–250" />
+            <button id="placeBidBtn">Place Bid</button>
+            <button id="skipBidBtn">Skip</button>
+        </div>
+        <div class="scroll">
+            <table class="table">
+                <thead><tr><th>Player</th><th>Bid</th><th>Status</th></tr></thead>
+                <tbody id="bidTable"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="partnerTrump" class="hidden">
+        <h2>Call Partners & Choose Trump</h2>
+        <div class="row gap">
+            <label>Trump
+                <select id="trumpSelect">
+                    <option value="S">Spades (♠)</option>
+                    <option value="H">Hearts (♥)</option>
+                    <option value="D">Diamonds (♦)</option>
+                    <option value="C">Clubs (♣)</option>
+                </select>
+            </label>
+        </div>
+        <div id="partnerCalls" class="col gap"></div>
+        <div class="row gap">
+            <input id="callRank" placeholder="Rank (A,K,Q,J,10,9…3)" />
+            <select id="callSuit">
+                <option value="S">♠</option>
+                <option value="H">♥</option>
+                <option value="D">♦</option>
+                <option value="C">♣</option>
+            </select>
+            <button id="addPartnerCallBtn">Call Card</button>
+            <button id="confirmPartnerTrumpBtn">Confirm & Start Round</button>
+        </div>
+        <p class="hint">Partners are chosen by specific cards. If the card is in your hand, you must choose another.</p>
+    </section>
+
+    <section id="tableSec" class="hidden">
+        <div class="row space">
+            <div>
+                <h2>Round <span id="roundNum">1</span> / 10</h2>
+                <p>Phase: <span id="phaseText">-</span> • Turn: <span id="turnName">-</span> • Trump: <span id="trumpBadge" class="badge">-</span></p>
+                <p>Bidding team: <span id="teamBadge" class="badge">-</span> • Bid: <span id="bidValue">-</span></p>
+                <p id="waitingText" class="hidden"></p>
+            </div>
+            <div>
+                <button id="showScoresBtn">Scores</button>
+            </div>
+        </div>
+
+        <div id="tableCircle" class="table-circle">
+            <!-- seats will render dynamically around the circle -->
+        </div>
+
+        <h3>Your Hand</h3>
+        <div id="hand" class="row wrap gap"></div>
+        <div class="row gap">
+            <button id="playSelectedBtn">Play Selected</button>
+            <button id="endTurnBtn">End Turn</button>
+        </div>
+    </section>
+
+    <dialog id="scoresDlg">
+        <h3>Scores</h3>
+        <div id="scoresBody"></div>
+        <button id="closeScoresBtn">Close</button>
+    </dialog>
+
+    <dialog id="rulesDlg">
+        <h3>Rules Summary</h3>
+        <div class="scroll">
+            <ol>
+                <li>4–8 players, 1 deck. 2s removed depending on player count (5p: any 2 random twos, 6p: all 2s, 7p: any 3 twos, 8p: all 2s).</li>
+                <li>Deal all remaining cards, then bidding starts with player after dealer. Bids 150–250; skip locks you out. A bid of 250 starts immediately.</li>
+                <li>Bid winner chooses trump and calls partners by specific card(s): 1 partner if 4–5 players, 2 partners if 6–8 players. Partner remains hidden until card appears.</li>
+                <li>You must follow suit if possible. If you can’t, you may play trump or any card. Highest trump wins, otherwise highest led-suit wins.</li>
+                <li>Points: A/K/Q/J/10 = 10, fives = 5, 3♠ = 30. Bidding team must meet/exceed bid by collected points.</li>
+                <li>Game = 10 rounds. Each successful bidding team member gains the bid value; otherwise every defender gains the bid value.</li>
+                <li>Dealer rotates clockwise each round. If someone disconnects, a 3‑minute pause shows.</li>
+            </ol>
+        </div>
+        <button id="closeRulesBtn">Close</button>
+    </dialog>
+</div>
+
+<script type="module" src="./firebase.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

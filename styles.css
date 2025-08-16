@@ -1,0 +1,40 @@
+*{box-sizing:border-box}
+:root{--bg:#0c0f14;--panel:#141a22;--muted:#8aa0bd;--text:#e8ebf0;--accent:#9fb3ff;--danger:#f08}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.app{max-width:1100px;margin:24px auto;padding:16px}
+.row{display:flex;align-items:center}
+.col{display:flex;flex-direction:column}
+.wrap{flex-wrap:wrap}
+.space{justify-content:space-between}
+.gap{gap:10px}
+section{background:var(--panel);border:1px solid #1f2833;border-radius:14px;padding:16px;margin-bottom:16px}
+header{margin-bottom:12px}
+label{display:inline-flex;gap:8px;align-items:center}
+input,select{padding:8px 10px;border-radius:10px;border:1px solid #314155;background:#0f141b;color:var(--text)}
+button{padding:10px 14px;border-radius:12px;border:1px solid #2d3a4d;background:#1b2532;color:var(--text);cursor:pointer}
+button:hover{filter:brightness(1.1)}
+button.danger{border-color:#5a2a2a;background:#3a1f1f}
+.hidden{display:none}
+.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding-left:0;list-style:none}
+.badge{font-size:12px;padding:2px 8px;border:1px solid #33445b;border-radius:999px}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid #2b3749;padding:6px 8px;text-align:left}
+.scroll{max-height:240px;overflow:auto}
+
+/* Cards */
+.card{width:56px;height:78px;border-radius:10px;border:1px solid #2e3b50;background:#0f141b;display:flex;align-items:center;justify-content:center;font-weight:700;user-select:none;cursor:pointer}
+.card.selected{outline:2px solid var(--accent)}
+.card.small{width:42px;height:58px;font-size:12px}
+
+/* Circular table */
+.table-circle{position:relative;margin:24px auto;border-radius:50%;background:radial-gradient(ellipse at center,#15202b 0%,#0e151d 70%);border:1px solid #1d2733}
+.seat{position:absolute;display:flex;flex-direction:column;align-items:center;gap:8px}
+.seat .name{font-size:12px}
+.seat .name.host{color:#ffd36b}
+.seat .name.bidder{color:#97ff9e}
+.seat .name.partner{color:#9fb3ff}
+.pile{display:flex;gap:6px}
+
+/* Dialogs */
+dialog{border:none;border-radius:14px;background:#0f141b;color:var(--text);padding:16px;max-width:720px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
