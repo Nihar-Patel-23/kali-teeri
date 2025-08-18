@@ -31,6 +31,7 @@ const ui = {
   dealerName: qs("#dealerName"),
   readyBtn: qs("#readyBtn"),
   leaveBtn: qs("#leaveBtn"),
+  resetBtn: qs("#resetBtn"),
 
   bidding: qs("#bidding"),
   bidTurnName: qs("#bidTurnName"),
@@ -316,6 +317,39 @@ async function joinRoom(code){
   wireRoom(code);
   ui.roomCodeText.textContent = code;
   ui.roomInfo.classList.remove("hidden");
+}
+
+async function resetRoom() {
+  if (!S.roomCode) return;
+  if (!S.isHost) {
+    alert("Only the host can reset the room.");
+    return;
+  }
+  if (!confirm("Reset the room and kick everyone?")) return;
+
+  const roomRef = ref(db, `rooms/${S.roomCode}`);
+
+  // Fresh lobby state
+  await update(roomRef, {
+    phase: "lobby",
+    players: {},            // remove all players
+    hands: {},              // clear hands
+    table: [],              // clear table
+    piles: {},              // clear per-trick points
+    ready: [],
+    bidding: null,
+    partnerCalls: [],
+    revealedPartners: [],
+    trump: null,
+    turn: null,
+    round: 1,
+    dealerId: S.playerId,   // host becomes dealer by default
+    scores: {},             // optional: wipe scores too
+    kickedAt: Date.now()    // bump a flag so clients can react if you want
+  });
+
+  // Locally, drop our own selection and snap
+  S.selectedCard = null;
 }
 
 function wireRoom(code){
@@ -706,6 +740,8 @@ ui.leaveBtn.onclick = async ()=>{
   const roomRef = ref(db, `rooms/${S.roomCode}`);
   await update(roomRef, { [`hands/${S.playerId}`]: null, [`players/${S.playerId}`]: null });
 };
+
+ui.resetBtn.onclick = resetRoom;
 
 // Bidding
 ui.placeBidBtn.onclick = () => {
