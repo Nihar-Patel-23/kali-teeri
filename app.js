@@ -321,10 +321,6 @@ async function joinRoom(code){
 
 async function resetRoom() {
   if (!S.roomCode) return;
-  if (!S.isHost) {
-    alert("Only the host can reset the room.");
-    return;
-  }
   if (!confirm("Reset the room and kick everyone?")) return;
 
   const roomRef = ref(db, `rooms/${S.roomCode}`);
