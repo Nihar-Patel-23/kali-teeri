@@ -38,6 +38,7 @@ const ui = {
   placeBidBtn: qs("#placeBidBtn"),
   skipBidBtn: qs("#skipBidBtn"),
   bidTable: qs("#bidTable"),
+  bidHand: qs("#bidHand"),
 
   partnerTrump: qs("#partnerTrump"),
   trumpSelect: qs("#trumpSelect"),
@@ -707,46 +708,18 @@ ui.leaveBtn.onclick = async ()=>{
 };
 
 // Bidding
-ui.placeBidBtn.addEventListener("click", async () => {
-  const bidVal = parseInt(ui.bidInput.value, 10);
-  if (isNaN(bidVal) || bidVal < 150 || bidVal > 250) {
-    alert("Enter a number between 150–250");
+ui.placeBidBtn.onclick = () => {
+  const val = Number(ui.bidInput.value);
+  if (Number.isNaN(val) || val < 150 || val > 250) {
+    alert("Enter a valid bid between 150–250");
     return;
   }
+  placeBid(val); // will verify phase & turn internally
+};
 
-  const snap = await get(ref(db, `rooms/MAIN/state`));
-  const state = snap.val();
-  if (!state) return;
-
-  const myId = auth.currentUser.uid;
-  if (state.turn !== myId) {
-    alert("Not your turn!");
-    return;
-  }
-
-  // write bid to db
-  await update(ref(db, `rooms/MAIN/bids/${myId}`), {
-    value: bidVal,
-    status: "placed",
-  });
-});
-
-ui.skipBidBtn.addEventListener("click", async () => {
-  const snap = await get(ref(db, `rooms/MAIN/state`));
-  const state = snap.val();
-  if (!state) return;
-
-  const myId = auth.currentUser.uid;
-  if (state.turn !== myId) {
-    alert("Not your turn!");
-    return;
-  }
-
-  await update(ref(db, `rooms/MAIN/bids/${myId}`), {
-    value: null,
-    status: "skipped",
-  });
-});
+ui.skipBidBtn.onclick = () => {
+  skipBid(); // will verify phase & turn internally
+};
 
 // Partner & trump
 ui.addPartnerCallBtn.onclick = addPartnerCall;
