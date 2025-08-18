@@ -354,8 +354,8 @@ function wireRoom(code){
     const data = ss.val();
     S.snap = data;
     if (data.phase === "bidding" && !data.bidding) {
-    const roomRef = ref(db, 'rooms/${S.roomCode}');
-    update(roomRef, { bidding: { bids: {}, winnerId: null, skipped: [] }});
+      const roomRef = ref(db, `rooms/${S.roomCode}`);
+      update(roomRef, { bidding: { bids: {}, winnerId: null, value: null, skipped: [] } });
     }
     S.isHost = data.hostId===S.playerId;
 
