@@ -268,26 +268,6 @@ async function createRoom(){
     });
   }
   await joinRoom(code);
-}`);
-  await set(roomRef, {
-    hostId: S.playerId,
-    createdAt: serverTimestamp(),
-    phase: "lobby",
-    players: {},
-    ready: [],
-    round: 1,
-    dealerId: S.playerId,
-    bidding: null,
-    trump: null,
-    partnerCalls: [], // array of {rank,suit}
-    revealedPartners: [], // playerIds revealed because they played called card
-    table: [], // current trick: [{playerId, card}]
-    hands: {},
-    turn: null,
-    scores: {}, // per-player cumulative
-    timeout: null
-  });
-  await joinRoom(code);
 }
 
 async function joinRoom(code){
