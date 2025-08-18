@@ -139,12 +139,21 @@ function renderPlayers(players, hostId, bidderId, partners) {
 }
 
 function renderHand(cards) {
-  ui.hand.innerHTML = "";
-  (cards||[]).forEach(c=>{
-    const el = document.createElement("div");
-    el.className = "card" + (S.selectedCard===c?" selected":"");
-    el.textContent = c;
-    el.onclick = ()=>{ S.selectedCard = (S.selectedCard===c?null:c); renderHand(cards); };
+  const renderInto = (id)=>{
+    const elWrap = document.getElementById(id);
+    if (!elWrap) return;
+    elWrap.innerHTML = "";
+    (cards||[]).forEach(c=>{
+      const el = document.createElement("div");
+      el.className = "card" + (S.selectedCard===c?" selected":"");
+      el.textContent = c;
+      el.onclick = ()=>{ S.selectedCard = (S.selectedCard===c?null:c); renderHand(cards); };
+      elWrap.appendChild(el);
+    });
+  };
+  renderInto("hand");
+  renderInto("bidHand");
+};
     ui.hand.appendChild(el);
   });
 }
@@ -699,8 +708,20 @@ ui.leaveBtn.onclick = async ()=>{
 };
 
 // Bidding
-ui.placeBidBtn.onclick = ()=> placeBid(ui.bidInput.value);
-ui.skipBidBtn.onclick = ()=> skipBid();
+ui.placeBidBtn.onclick = ()=>{
+  const d = S.snap;
+  if (!d || d.phase !== "bidding") { alert("Bidding isn't active."); return; }
+  if (d.turn !== S.playerId) { alert("Not your turn to bid."); return; }
+  const val = Number(ui.bidInput.value);
+  if (!(val >= 150 && val <= 250)) { alert("Enter a valid bid between 150–250."); return; }
+  placeBid(val);
+};
+ui.skipBidBtn.onclick = ()=>{
+  const d = S.snap;
+  if (!d || d.phase !== "bidding") { alert("Bidding isn't active."); return; }
+  if (d.turn !== S.playerId) { alert("Not your turn."); return; }
+  skipBid();
+};
 
 // Partner & trump
 ui.addPartnerCallBtn.onclick = addPartnerCall;
