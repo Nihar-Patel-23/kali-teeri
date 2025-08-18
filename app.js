@@ -139,22 +139,21 @@ function renderPlayers(players, hostId, bidderId, partners) {
 }
 
 function renderHand(cards) {
-  const renderInto = (id)=>{
-    const elWrap = document.getElementById(id);
-    if (!elWrap) return;
-    elWrap.innerHTML = "";
-    (cards||[]).forEach(c=>{
-      const el = document.createElement("div");
-      el.className = "card" + (S.selectedCard===c?" selected":"");
-      el.textContent = c;
-      el.onclick = ()=>{ S.selectedCard = (S.selectedCard===c?null:c); renderHand(cards); };
-      elWrap.appendChild(el);
+  const handDivs = [ui.hand, ui.bidHand];
+  handDivs.forEach(div => {
+    if (!div) return;
+    div.innerHTML = "";
+    cards.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "card-btn";
+      btn.textContent = c;
+      btn.dataset.card = c;
+      btn.onclick = () => {
+        document.querySelectorAll(".card-btn").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+      };
+      div.appendChild(btn);
     });
-  };
-  renderInto("hand");
-  renderInto("bidHand");
-};
-    ui.hand.appendChild(el);
   });
 }
 
@@ -708,20 +707,46 @@ ui.leaveBtn.onclick = async ()=>{
 };
 
 // Bidding
-ui.placeBidBtn.onclick = ()=>{
-  const d = S.snap;
-  if (!d || d.phase !== "bidding") { alert("Bidding isn't active."); return; }
-  if (d.turn !== S.playerId) { alert("Not your turn to bid."); return; }
-  const val = Number(ui.bidInput.value);
-  if (!(val >= 150 && val <= 250)) { alert("Enter a valid bid between 150–250."); return; }
-  placeBid(val);
-};
-ui.skipBidBtn.onclick = ()=>{
-  const d = S.snap;
-  if (!d || d.phase !== "bidding") { alert("Bidding isn't active."); return; }
-  if (d.turn !== S.playerId) { alert("Not your turn."); return; }
-  skipBid();
-};
+ui.placeBidBtn.addEventListener("click", async () => {
+  const bidVal = parseInt(ui.bidInput.value, 10);
+  if (isNaN(bidVal) || bidVal < 150 || bidVal > 250) {
+    alert("Enter a number between 150–250");
+    return;
+  }
+
+  const snap = await get(ref(db, `rooms/MAIN/state`));
+  const state = snap.val();
+  if (!state) return;
+
+  const myId = auth.currentUser.uid;
+  if (state.turn !== myId) {
+    alert("Not your turn!");
+    return;
+  }
+
+  // write bid to db
+  await update(ref(db, `rooms/MAIN/bids/${myId}`), {
+    value: bidVal,
+    status: "placed",
+  });
+});
+
+ui.skipBidBtn.addEventListener("click", async () => {
+  const snap = await get(ref(db, `rooms/MAIN/state`));
+  const state = snap.val();
+  if (!state) return;
+
+  const myId = auth.currentUser.uid;
+  if (state.turn !== myId) {
+    alert("Not your turn!");
+    return;
+  }
+
+  await update(ref(db, `rooms/MAIN/bids/${myId}`), {
+    value: null,
+    status: "skipped",
+  });
+});
 
 // Partner & trump
 ui.addPartnerCallBtn.onclick = addPartnerCall;
