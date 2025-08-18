@@ -155,7 +155,6 @@ function renderHand(cards) {
   renderInto("bidHand");
 };
     ui.hand.appendChild(el);
-  );
 }
 
 function seatPositions(n, radius){
