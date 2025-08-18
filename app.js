@@ -32,6 +32,7 @@ const ui = {
   readyBtn: qs("#readyBtn"),
   leaveBtn: qs("#leaveBtn"),
   resetBtn: qs("#resetBtn"),
+  startBtn: qs("#startBtn"),
 
   bidding: qs("#bidding"),
   bidTurnName: qs("#bidTurnName"),
@@ -324,14 +325,12 @@ async function resetRoom() {
   if (!confirm("Reset the room and kick everyone?")) return;
 
   const roomRef = ref(db, `rooms/${S.roomCode}`);
-
-  // Fresh lobby state
   await update(roomRef, {
     phase: "lobby",
-    players: {},            // remove all players
-    hands: {},              // clear hands
-    table: [],              // clear table
-    piles: {},              // clear per-trick points
+    players: {},            // clears players, so new joiners are fresh
+    hands: {},
+    table: [],
+    piles: {},
     ready: [],
     bidding: null,
     partnerCalls: [],
@@ -339,14 +338,14 @@ async function resetRoom() {
     trump: null,
     turn: null,
     round: 1,
-    dealerId: S.playerId,   // host becomes dealer by default
-    scores: {},             // optional: wipe scores too
-    kickedAt: Date.now()    // bump a flag so clients can react if you want
+    dealerId: S.playerId,   // ensure there is a dealer for the next deal
+    scores: {},
+    kickedAt: Date.now()
   });
 
-  // Locally, drop our own selection and snap
   S.selectedCard = null;
 }
+
 
 function wireRoom(code){
   const roomRef = ref(db, `rooms/${code}`);
@@ -784,12 +783,15 @@ function showScores(d){
 // ===== Event wiring =====
 ui.createRoomBtn && (ui.createRoomBtn.onclick = createRoom);
 ui.joinBtn.onclick = ()=>{ joinRoom(MAIN_CODE); };
-ui.readyBtn.onclick = async ()=>{
+ui.readyBtn.onclick = async () => {
   if (!S.roomCode) return;
   const pr = ref(db, `rooms/${S.roomCode}/players/${S.playerId}`);
-  await update(pr, { isReady:true });
-  if (S.isHost && await allReady()) await startDeal();
+  await update(pr, { isReady: true });
+
+  // If everyone is ready, start immediately (no host gate)
+  if (await allReady()) await startDeal();
 };
+
 ui.leaveBtn.onclick = async ()=>{
   if (!S.roomCode) return;
   const roomRef = ref(db, `rooms/${S.roomCode}`);
@@ -797,6 +799,15 @@ ui.leaveBtn.onclick = async ()=>{
 };
 
 ui.resetBtn.onclick = resetRoom;
+
+ui.startBtn.onclick = async () => {
+  const ok = await allReady();
+  if (!ok) {
+    alert("Need 4–8 players and everyone must click “I’m Ready”.");
+    return;
+  }
+  await startDeal(); // force start even if you’re not the host
+};
 
 // Bidding
 ui.placeBidBtn.onclick = () => {
