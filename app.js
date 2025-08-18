@@ -371,12 +371,19 @@ function wireRoom(code){
     ui.tableSec.classList.toggle("hidden", data.phase!=="playing");
 
     // Bidding turn panel and table
-    if (data.phase==="bidding"){
+    if (data.phase === "bidding") {
       ui.bidTurnName.textContent = data.players?.[data.turn]?.name || "-";
       const iSkipped = data.bidding?.skipped?.includes(S.playerId);
-      ui.bidInput.disabled = iSkipped || data.turn!==S.playerId;
-      ui.placeBidBtn.disabled = iSkipped || data.turn!==S.playerId;
-      ui.skipBidBtn.disabled = iSkipped || data.turn!==S.playerId;
+
+      // Keep enabled; show tooltip if not your turn
+      ui.bidInput.disabled = iSkipped;
+      ui.placeBidBtn.disabled = iSkipped;
+      ui.skipBidBtn.disabled = iSkipped;
+
+      const notMyTurn = data.turn !== S.playerId;
+      ui.placeBidBtn.title = notMyTurn ? "Not your turn" : "";
+      ui.skipBidBtn.title  = notMyTurn ? "Not your turn" : "";
+
       renderBidsTable(data);
     }
 
@@ -465,48 +472,100 @@ function nextBidderTurn(d){
   return null; // no one left
 }
 
+// REPLACE your placeBid() with this:
 async function placeBid(val){
   const roomRef = ref(db, `rooms/${S.roomCode}`);
-  const ss = await get(roomRef); const d = ss.val();
-  if (d.phase!=="bidding" || d.turn!==S.playerId) return;
-  const v = Math.max(150, Math.min(250, Number(val||0)));
+  const ss = await get(roomRef);
+  const d = ss.val();
 
+  if (!d || !d.bidding) {
+    alert("Bidding hasn't started yet.");
+    return;
+  }
+
+  if (d.phase !== "bidding") {
+    alert("Bidding isn't active.");
+    return;
+  }
+
+  if (d.turn !== S.playerId) {
+    alert("Not your turn to bid.");
+    return;
+  }
+
+  // validate bid
+  const num = Number(val);
+  if (!Number.isInteger(num) || num < 150 || num > 250) {
+    alert("Enter a valid bid between 150–250.");
+    return;
+  }
+
+  const v = Math.max(150, Math.min(250, num));
   const bids = d.bidding.bids || {};
   bids[S.playerId] = v;
 
-  // Update current winner
-  let winnerId = d.bidding.winnerId; let value = d.bidding.value ?? 0;
-  if (v > value){ winnerId = S.playerId; value = v; }
+  // update current winner
+  let winnerId = d.bidding.winnerId;
+  let value = d.bidding.value ?? 0;
+  if (v > value) { winnerId = S.playerId; value = v; }
 
-  // If max 250, lock bidding instantly
-  if (v===250){
-    await update(roomRef, { bidding: { bids, winnerId, value, skipped: Object.keys(d.players) }, turn: null });
+  // max bid ends immediately
+  if (v === 250) {
+    await update(roomRef, {
+      bidding: { bids, winnerId, value, skipped: Object.keys(d.players) },
+      turn: null
+    });
     await moveToPartnerTrump();
     return;
   }
 
-  // Move to next bidder who hasn't skipped
+  // next bidder (who hasn't skipped)
   const next = nextBidderTurn({ ...d, bidding: { ...d.bidding, bids } });
-  if (next){
-    await update(roomRef, { bidding: { ...d.bidding, bids }, turn: next });
+  if (next) {
+    await update(roomRef, { bidding: { ...d.bidding, bids, winnerId, value }, turn: next });
   } else {
-    // No more bidders; proceed
     await update(roomRef, { bidding: { ...d.bidding, bids, winnerId, value }, turn: null });
     await moveToPartnerTrump();
   }
 }
 
+
+// REPLACE your skipBid() with this:
 async function skipBid(){
   const roomRef = ref(db, `rooms/${S.roomCode}`);
-  const ss = await get(roomRef); const d = ss.val();
-  if (d.phase!=="bidding" || d.turn!==S.playerId) return;
-  const skipped = new Set(d.bidding.skipped||[]);
+  const ss = await get(roomRef);
+  const d = ss.val();
+
+  if (!d || !d.bidding) {
+    alert("Bidding hasn't started yet.");
+    return;
+  }
+
+  if (d.phase !== "bidding") {
+    alert("Bidding isn't active.");
+    return;
+  }
+
+  if (d.turn !== S.playerId) {
+    alert("Not your turn.");
+    return;
+  }
+
+  const skipped = new Set(d.bidding.skipped || []);
   skipped.add(S.playerId);
+
   const next = nextBidderTurn({ ...d, bidding: { ...d.bidding, skipped: Array.from(skipped) } });
-  // If the skipper had the current high bid, keep winner unchanged; skipping just forfeits future bids
-  await update(roomRef, { bidding: { ...d.bidding, skipped: Array.from(skipped) }, turn: next });
-  if (!next){ await moveToPartnerTrump(); }
+
+  await update(roomRef, {
+    bidding: { ...d.bidding, skipped: Array.from(skipped) },
+    turn: next
+  });
+
+  if (!next) {
+    await moveToPartnerTrump();
+  }
 }
+
 
 async function moveToPartnerTrump(){
   const roomRef = ref(db, `rooms/${S.roomCode}`);
@@ -742,11 +801,7 @@ ui.resetBtn.onclick = resetRoom;
 // Bidding
 ui.placeBidBtn.onclick = () => {
   const val = Number(ui.bidInput.value);
-  if (Number.isNaN(val) || val < 150 || val > 250) {
-    alert("Enter a valid bid between 150–250");
-    return;
-  }
-  placeBid(val); // will verify phase & turn internally
+  placeBid(val);
 };
 
 ui.skipBidBtn.onclick = () => {
