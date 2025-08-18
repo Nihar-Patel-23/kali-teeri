@@ -21,7 +21,7 @@ const KALI_TEERI = "3S";
 // ===== UI refs =====
 const ui = {
   name: qs("#displayName"),
-  createBtn: qs("#createRoomBtn"),
+  createRoomBtn: qs("#createRoomBtn"),
   roomCodeInput: qs("#roomCodeInput"),
   joinBtn: qs("#joinRoomBtn"),
   roomInfo: qs("#roomInfo"),
