@@ -353,10 +353,6 @@ function wireRoom(code){
   onValue(roomRef, (ss)=>{
     const data = ss.val();
     S.snap = data;
-    if (data.phase === "bidding" && !data.bidding) {
-      const roomRef = ref(db, `rooms/${S.roomCode}`);
-      update(roomRef, { bidding: { bids: {}, winnerId: null, value: null, skipped: [] } });
-    }
     S.isHost = data.hostId===S.playerId;
 
     const bidderId = data.bidding?.winnerId || null;
