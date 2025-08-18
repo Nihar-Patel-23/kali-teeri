@@ -71,6 +71,7 @@ const ui = {
 };
 
 // ===== Local state =====
+const MAIN_CODE = "MAIN"; // single shared room on Firebase
 let S = {
   roomCode: null,
   playerId: genId(),
@@ -243,8 +244,31 @@ function canPlay(card, snap){
 
 // ===== Firebase actions =====
 async function createRoom(){
-  const code = Math.random().toString(36).slice(2,6).toUpperCase();
+  const code = MAIN_CODE; // single fixed room
   const roomRef = ref(db, `rooms/${code}`);
+  const snap = await get(roomRef);
+  if (!snap.exists()) {
+    await set(roomRef, {
+      hostId: S.playerId,
+      createdAt: serverTimestamp(),
+      phase: "lobby",
+      players: {},
+      ready: [],
+      round: 1,
+      dealerId: S.playerId,
+      bidding: null,
+      trump: null,
+      partnerCalls: [],
+      revealedPartners: [],
+      table: [],
+      hands: {},
+      turn: null,
+      scores: {},
+      timeout: null
+    });
+  }
+  await joinRoom(code);
+}`);
   await set(roomRef, {
     hostId: S.playerId,
     createdAt: serverTimestamp(),
@@ -269,8 +293,29 @@ async function createRoom(){
 async function joinRoom(code){
   S.playerName = ui.name.value || `Player-${short(S.playerId)}`;
   const roomRef = ref(db, `rooms/${code}`);
-  const snap = await get(roomRef);
-  if (!snap.exists()) return alert("Room not found");
+  let snap = await get(roomRef);
+  // Auto-create MAIN if missing
+  if (!snap.exists()) {
+    await set(roomRef, {
+      hostId: S.playerId,
+      createdAt: serverTimestamp(),
+      phase: "lobby",
+      players: {},
+      ready: [],
+      round: 1,
+      dealerId: S.playerId,
+      bidding: null,
+      trump: null,
+      partnerCalls: [],
+      revealedPartners: [],
+      table: [],
+      hands: {},
+      turn: null,
+      scores: {},
+      timeout: null
+    });
+    snap = await get(roomRef);
+  }
   const players = snap.val().players || {};
   if (Object.keys(players).length >= 8) return alert("Room full (max 8)");
 
@@ -660,7 +705,7 @@ function showScores(d){
 
 // ===== Event wiring =====
 ui.createRoomBtn && (ui.createRoomBtn.onclick = createRoom);
-ui.joinBtn.onclick = ()=>{ const code=(ui.roomCodeInput.value||"").trim().toUpperCase(); if(!code) return alert("Enter room code"); joinRoom(code); };
+ui.joinBtn.onclick = ()=>{ joinRoom(MAIN_CODE); };
 ui.readyBtn.onclick = async ()=>{
   if (!S.roomCode) return;
   const pr = ref(db, `rooms/${S.roomCode}/players/${S.playerId}`);
@@ -693,3 +738,5 @@ ui.closeRulesBtn.onclick = ()=> ui.rulesDlg.close();
 
 // Default name
 ui.name.value = `Player-${short(S.playerId)}`;
+// Auto-join main room on load if desired
+// joinRoom(MAIN_CODE);

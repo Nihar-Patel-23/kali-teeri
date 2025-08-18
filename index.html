@@ -18,9 +18,11 @@
 
     <section id="lobby">
         <div class="room-controls row wrap gap">
-            <button id="createRoomBtn">Create Room</button>
-            <input id="roomCodeInput" placeholder="Enter room code" />
-            <button id="joinRoomBtn">Join Room</button>
+            <button id="createRoomBtn">Init Main Room</button>
+            <label for="roomCodeInput">Room
+                <input id="roomCodeInput" value="MAIN" disabled />
+            </label>
+            <button id="joinRoomBtn">Join Main Room</button>
         </div>
 
         <div id="roomInfo" class="hidden">
@@ -38,7 +40,9 @@
         <h2>Bidding</h2>
         <p>Turn: <span id="bidTurnName">-</span></p>
         <div id="bidPanel" class="row gap">
-            <input id="bidInput" type="number" min="150" max="250" step="1" placeholder="150–250" />
+            <label for="bidInput">Your bid
+                <input id="bidInput" type="number" min="150" max="250" step="1" placeholder="150–250" />
+            </label>
             <button id="placeBidBtn">Place Bid</button>
             <button id="skipBidBtn">Skip</button>
         </div>
@@ -64,13 +68,17 @@
         </div>
         <div id="partnerCalls" class="col gap"></div>
         <div class="row gap">
-            <input id="callRank" placeholder="Rank (A,K,Q,J,10,9…3)" />
-            <select id="callSuit">
-                <option value="S">♠</option>
-                <option value="H">♥</option>
-                <option value="D">♦</option>
-                <option value="C">♣</option>
-            </select>
+            <label for="callRank">Call rank
+                <input id="callRank" placeholder="Rank (A,K,Q,J,10,9…3)" />
+            </label>
+            <label for="callSuit">Suit
+                <select id="callSuit">
+                    <option value="S">♠</option>
+                    <option value="H">♥</option>
+                    <option value="D">♦</option>
+                    <option value="C">♣</option>
+                </select>
+            </label>
             <button id="addPartnerCallBtn">Call Card</button>
             <button id="confirmPartnerTrumpBtn">Confirm & Start Round</button>
         </div>
